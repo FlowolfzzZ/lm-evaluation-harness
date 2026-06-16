@@ -1,0 +1,39 @@
+task: ccks2026
+dataset_path: json
+dataset_kwargs:
+  data_files:
+    test: data/ccks2026/qa_answer.json
+test_split: test
+process_docs: !function utils.process_docs
+output_type: generate_until
+doc_to_text: |-
+  你将看到一个知识图谱（以三元组表示，格式：主体 --[关系]--> 客体）以及一篇相关文档。
+  请基于知识图谱进行推理来回答问题：
+  1. 先在知识图谱中定位与问题相关的三元组（实体即三元组中的主体或客体）；
+  2. 必要时沿箭头方向多跳串联，逐步推理到答案所在的目标实体；
+  3. 最终答案必须是你在知识图谱中检索到的、真实存在的某个实体（节点），请逐字照抄该实体名称，不要改写、扩写、补充或写成完整句子。
+  最后另起一行，以“答案是X”结束你的回答，其中 X 就是你在知识图谱上检索到的最终实体名称（一个词或短语）。
+
+  知识图谱三元组：
+  {{knowledge_triples}}
+
+  相关文档（供参考）：
+  {{document}}
+
+  问题：{{question}}
+doc_to_target: "{{answer}}"
+process_results: !function utils.process_results
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+generation_kwargs:
+  do_sample: false
+  max_gen_toks: 512
+  until:
+    - "问题："
+    - "</s>"
+    - "<|im_end|>"
+metadata:
+  version: 1.0
+  num_fewshot: 0

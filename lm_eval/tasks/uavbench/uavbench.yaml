@@ -1,0 +1,37 @@
+task: uavbench
+dataset_path: json
+dataset_kwargs:
+  data_files:
+    test: data/UAVBench_API_2000/scenario_mcqs/*.json
+test_split: test
+output_type: generate_until
+doc_to_text: |-
+  You are an expert in UAV behavior prediction and decision reasoning. Answer the multiple-choice question.
+  Please reason step by step, then put your final answer within \boxed{}.
+  The final answer must be exactly one uppercase option letter from A to G, for example \boxed{A}.
+
+  Scenario:
+  {{description}}
+
+  Question:
+  {{question}}
+
+  Choices:
+  {% for choice in choices -%}
+  {{choice}}
+  {% endfor %}
+
+  Answer:
+doc_to_target: "{{correct_choice}}"
+process_results: !function utils.process_results
+metric_list:
+  - metric: acc
+    aggregation: mean
+    higher_is_better: true
+generation_kwargs:
+  do_sample: false
+  max_gen_toks: 512
+  until: []
+metadata:
+  version: 1.0
+  num_fewshot: 0
