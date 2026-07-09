@@ -1,0 +1,35 @@
+task: ccks2026
+dataset_path: json
+dataset_kwargs:
+  data_files:
+    test: data/ccks2026/qa_answer.json
+test_split: test
+process_docs: !function utils.process_docs
+output_type: generate_until
+doc_to_text: |-
+  请根据下面的知识图谱和文档回答问题，先一步步推理，分析知识图谱和文档中的相关信息，然后再得出答案。
+  答案是一个实体名称（一个词或短语），请在推理之后另起一行，用“答案是X”的格式给出。
+
+  知识图谱：
+  {{knowledge_triples}}
+
+  文档：
+  {{document}}
+
+  问题：{{question}}
+doc_to_target: "{{answer}}"
+process_results: !function utils.process_results
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+generation_kwargs:
+  do_sample: false
+  max_gen_toks: 512
+  until:
+    - "问题："
+    - "</s>"
+    - "<|im_end|>"
+metadata:
+  version: 1.0
+  num_fewshot: 0
