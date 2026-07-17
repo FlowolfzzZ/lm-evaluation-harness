@@ -1,0 +1,47 @@
+include: aime24.yaml
+task: aime24_avg8
+repeats: 8
+# doc_to_text: "Question: {{Problem}}\nPlease reason step by step, and put your final answer within \\boxed{}.\nAnswer:"
+process_results: !function utils.process_results_samples
+metric_list:
+  - metric: "sample@1"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "sample@2"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "sample@3"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "sample@4"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "sample@5"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "sample@6"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "sample@7"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "sample@8"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "avg@8"
+    aggregation: mean
+    higher_is_better: true
+generation_kwargs:
+  until:
+    - "Question:"
+    - "</s>"
+    - "<|im_end|>"
+    - "<|eot_id|>"
+  do_sample: true
+  temperature: 0.7
+  max_gen_toks: 32768
+filter_list:
+  - name: "collect_responses"
+    filter:
+      - function: "custom"
+        filter_fn: !function utils.passthrough_responses

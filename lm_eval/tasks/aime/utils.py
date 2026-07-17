@@ -2,6 +2,43 @@ import re
 from typing import Dict, List
 
 
+def passthrough_responses(
+    resps: List[List[str]], docs: List[dict]
+) -> List[List[str]]:
+    """Keep all sampled responses for per-sample and average metrics."""
+    return resps
+
+
+def process_results_samples(doc: dict, results: List[List[str]]) -> Dict[str, float]:
+    """Return each sample's score and the average over all samples.
+
+    results = [inst.filtered_resps] where inst.resps = [r0, r1, ..., r7],
+    so results[0] is the list of sampled responses for this doc.
+    """
+    responses = results[0]
+    answer_key = next(k for k in doc.keys() if k.lower() == "answer")
+    target = str(doc[answer_key])
+    scores = []
+    for response in responses:
+        indices = [pos for pos, char in enumerate(response) if char == "$"]
+        if len(indices) <= 1:
+            answer = response
+        else:
+            answer = response[indices[0] + 1 : indices[-1]]
+        boxed_answer = last_boxed_only_string(response)
+        if boxed_answer is not None:
+            try:
+                boxed_content = remove_boxed(boxed_answer)
+                if boxed_content is not None:
+                    answer = boxed_content
+            except (AssertionError, IndexError):
+                pass
+        scores.append(1 if is_equiv(answer, target) else 0)
+    result = {f"sample@{k}": scores[k - 1] for k in range(1, len(scores) + 1)}
+    result[f"avg@{len(scores)}"] = sum(scores) / len(scores)
+    return result
+
+
 def process_results(doc: dict, results: List[str]) -> Dict[str, int]:
     retval = 0
     response = results[0]
