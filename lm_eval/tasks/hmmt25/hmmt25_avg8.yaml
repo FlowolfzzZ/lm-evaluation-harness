@@ -1,0 +1,73 @@
+include: hmmt25.yaml
+task: hmmt25_avg8
+repeats: 8
+process_results: !function utils.process_results_samples
+metric_list:
+  - metric: "sample@1"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "sample@2"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "sample@3"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "sample@4"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "sample@5"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "sample@6"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "sample@7"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "sample@8"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "avg@8"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "mv_sample@1"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "mv_sample@2"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "mv_sample@3"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "mv_sample@4"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "mv_sample@5"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "mv_sample@6"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "mv_sample@7"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "mv_sample@8"
+    aggregation: mean
+    higher_is_better: true
+  - metric: "mv_avg@8"
+    aggregation: mean
+    higher_is_better: true
+generation_kwargs:
+  until:
+    - "Problem:"
+    - "</s>"
+    - "<|im_end|>"
+    - "<|eot_id|>"
+  do_sample: true
+  temperature: 0.7
+  max_gen_toks: 32768
+filter_list:
+  - name: "collect_responses"
+    filter:
+      - function: "custom"
+        filter_fn: !function utils.passthrough_responses

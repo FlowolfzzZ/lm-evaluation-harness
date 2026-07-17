@@ -29,6 +29,32 @@ def pass_at_1(
     )[0]["pass@1"]
 
 
+def process_results_samples(doc: dict, results: list[list[str]]) -> dict[str, float]:
+    """Return each sample's score and the average over all samples."""
+    predictions = results[0]
+    reference = "\n".join(doc["test_list"][:3])
+    _, execution_results = pass_at_k.compute(
+        references=[reference],
+        predictions=[predictions],
+        k=[1],
+    )
+
+    task_results = execution_results.get(0)
+    if task_results is None:
+        task_results = next(iter(execution_results.values()))
+    task_results = sorted(task_results, key=lambda result: result["completion_id"])
+    scores = [int(result["passed"]) for result in task_results]
+
+    if len(scores) != len(predictions):
+        raise ValueError(
+            f"Expected {len(predictions)} execution results, got {len(scores)}"
+        )
+
+    metrics = {f"sample@{k}": scores[k - 1] for k in range(1, len(scores) + 1)}
+    metrics[f"avg@{len(scores)}"] = sum(scores) / len(scores)
+    return metrics
+
+
 def extract_code_blocks(text: str) -> str:
     # Pattern to match ```...``` blocks
     pattern = r"```(?:\w+)?\n?(.*?)\n?```"
