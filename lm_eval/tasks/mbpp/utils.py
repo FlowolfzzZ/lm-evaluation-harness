@@ -1,4 +1,3 @@
-import re
 from typing import Union
 
 import evaluate as hf_evaluate
@@ -42,8 +41,19 @@ def process_results_samples(doc: dict, results: list[list[str]]) -> dict[str, fl
     task_results = execution_results.get(0)
     if task_results is None:
         task_results = next(iter(execution_results.values()))
-    task_results = sorted(task_results, key=lambda result: result["completion_id"])
-    scores = [int(result["passed"]) for result in task_results]
+    # evaluate/code_eval returns ``(completion_id, result_dict)`` tuples in
+    # current releases, while some older releases returned result dicts.
+    # Normalize both shapes so sample@N remains tied to generation order.
+    task_results = sorted(
+        task_results,
+        key=lambda result: result[0]
+        if isinstance(result, tuple)
+        else result["completion_id"],
+    )
+    scores = [
+        int((result[1] if isinstance(result, tuple) else result)["passed"])
+        for result in task_results
+    ]
 
     if len(scores) != len(predictions):
         raise ValueError(
@@ -56,18 +66,15 @@ def process_results_samples(doc: dict, results: list[list[str]]) -> dict[str, fl
 
 
 def extract_code_blocks(text: str) -> str:
-    # Pattern to match ```...``` blocks
-    pattern = r"```(?:\w+)?\n?(.*?)\n?```"
-    # (+ ```) as we add the opening "```python" to the gen_prefix
-    matches = re.findall(pattern, r"```" + text, re.DOTALL)
-    # if no matches, try to match ```...``` blocks (after removing the language)
-    if not matches:
-        text_without_lang = re.sub(r"```python", "```", text)
-        matches = re.findall(pattern, text_without_lang, re.DOTALL)
-    if not matches:
-        return ""
-    else:
-        return matches[0]
+    """Extract code generated after the task's opening `````python`` prefix.
+
+    ``gen_prefix`` is part of the prompt, so the returned model text starts
+    directly with code (usually ``def ...``) and only contains the closing
+    fence.  Pretending that the response itself starts with ````` `` makes a
+    regex interpret the leading ``def``/``from`` as a fence language tag and
+    drops it, turning every otherwise valid completion into invalid Python.
+    """
+    return text.split("```", 1)[0].strip()
 
 
 def build_predictions(resps: list[list[str]], docs: list[dict]) -> list[list[str]]:

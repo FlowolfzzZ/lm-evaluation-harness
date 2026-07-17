@@ -1,4 +1,4 @@
-include: mbpp.yaml
+include: mbpp_instruct.yaml
 task: mbpp_avg8
 repeats: 8
 process_results: !function utils.process_results_samples
@@ -31,7 +31,7 @@ metric_list:
     aggregation: mean
     higher_is_better: true
 generation_kwargs:
-  until:
-    - "[DONE]"
+  until: []
+  max_gen_toks: 1024
   do_sample: true
   temperature: 0.7

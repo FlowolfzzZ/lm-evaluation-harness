@@ -1,5 +1,5 @@
-include: humaneval_instruct.yaml
-task: humaneval_avg8
+include: codeforces.yaml
+task: codeforces_avg8
 repeats: 8
 process_results: !function utils.process_results_samples
 metric_list:
@@ -32,11 +32,14 @@ metric_list:
     higher_is_better: true
 generation_kwargs:
   until:
-    - "\nclass"
-    - "\ndef"
-    - "\n#"
-    - "\nif"
-    - "\nprint"
-  max_gen_toks: 1024
+    - "</s>"
+    - "<|im_end|>"
+    - "<|eot_id|>"
+  max_gen_toks: 8192
   do_sample: true
   temperature: 0.7
+filter_list:
+  - name: "collect_responses"
+    filter:
+      - function: "custom"
+        filter_fn: !function utils.passthrough_responses

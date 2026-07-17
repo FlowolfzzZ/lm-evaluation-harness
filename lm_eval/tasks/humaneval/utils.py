@@ -36,8 +36,19 @@ def process_results_samples(doc: dict, results: list[list[str]]) -> dict[str, fl
     task_results = execution_results.get(0)
     if task_results is None:
         task_results = next(iter(execution_results.values()))
-    task_results = sorted(task_results, key=lambda result: result["completion_id"])
-    scores = [int(result["passed"]) for result in task_results]
+    # evaluate/code_eval returns ``(completion_id, result_dict)`` tuples in
+    # current releases, while some older releases returned result dicts.
+    # Normalize both shapes so sample@N remains tied to generation order.
+    task_results = sorted(
+        task_results,
+        key=lambda result: result[0]
+        if isinstance(result, tuple)
+        else result["completion_id"],
+    )
+    scores = [
+        int((result[1] if isinstance(result, tuple) else result)["passed"])
+        for result in task_results
+    ]
 
     if len(scores) != len(predictions):
         raise ValueError(
