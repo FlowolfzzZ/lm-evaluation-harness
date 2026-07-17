@@ -30,33 +30,6 @@ metric_list:
   - metric: "avg@8"
     aggregation: mean
     higher_is_better: true
-  - metric: "mv_sample@1"
-    aggregation: mean
-    higher_is_better: true
-  - metric: "mv_sample@2"
-    aggregation: mean
-    higher_is_better: true
-  - metric: "mv_sample@3"
-    aggregation: mean
-    higher_is_better: true
-  - metric: "mv_sample@4"
-    aggregation: mean
-    higher_is_better: true
-  - metric: "mv_sample@5"
-    aggregation: mean
-    higher_is_better: true
-  - metric: "mv_sample@6"
-    aggregation: mean
-    higher_is_better: true
-  - metric: "mv_sample@7"
-    aggregation: mean
-    higher_is_better: true
-  - metric: "mv_sample@8"
-    aggregation: mean
-    higher_is_better: true
-  - metric: "mv_avg@8"
-    aggregation: mean
-    higher_is_better: true
 generation_kwargs:
   until:
     - "Problem:"
