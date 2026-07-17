@@ -65,24 +65,14 @@ def process_results(doc: dict, results: List[str]) -> Dict[str, int]:
 
 def process_results_samples(doc: dict, results: List[List[str]]) -> Dict[str, float]:
     responses = results[0]
-    answer_key = next(k for k in doc.keys() if k.lower() == "answer")
-    raw_target = str(doc[answer_key])
     target = _normalize_target(doc)
 
     exact_scores = []
-    mv_scores = []
     for response in responses:
         exact_scores.append(1 if is_equiv(_extract_model_answer(response), target) else 0)
-        try:
-            mv = verify(gold=parse(raw_target), target=parse(response))
-            mv_scores.append(1 if mv else 0)
-        except Exception:
-            mv_scores.append(0)
 
     result = {}
     for k in range(1, len(exact_scores) + 1):
         result[f"sample@{k}"] = exact_scores[k - 1]
-        result[f"mv_sample@{k}"] = mv_scores[k - 1]
     result[f"avg@{len(exact_scores)}"] = sum(exact_scores) / len(exact_scores)
-    result[f"mv_avg@{len(mv_scores)}"] = sum(mv_scores) / len(mv_scores)
     return result
