@@ -2,7 +2,7 @@ import logging
 import re
 import signal
 from importlib.metadata import version
-from typing import Dict, List, Optional
+from typing import Optional
 
 import datasets
 
@@ -22,6 +22,13 @@ except (ModuleNotFoundError, AssertionError) as e:
         "`sympy`, `math_verify` and `antlr4-python3-runtime==4.11` are required for generating translation task prompt templates. "
         "Please install the required packages via pip install lm-eval[math] or pip install -e .[math]"
     ) from e
+
+
+def passthrough_responses(
+    resps: list[list[str]], docs: list[dict]
+) -> list[list[str]]:
+    """Keep all sampled responses for per-sample and average metrics."""
+    return resps
 
 
 # taken from
@@ -94,6 +101,26 @@ def process_results(doc: dict, results: list[str]) -> dict[str, int]:
         "math_verify": mathval,
     }
     return res
+
+
+def process_results_samples(
+    doc: dict, results: list[list[str]]
+) -> dict[str, float]:
+    """Score every sampled response and average both Minerva Math metrics."""
+    responses = results[0]
+    scores = [process_results(doc, [response]) for response in responses]
+
+    result = {}
+    for k, score in enumerate(scores, start=1):
+        result[f"sample@{k}"] = score["exact_match"]
+        result[f"mv_sample@{k}"] = score["math_verify"]
+    result[f"avg@{len(scores)}"] = sum(
+        score["exact_match"] for score in scores
+    ) / len(scores)
+    result[f"mv_avg@{len(scores)}"] = sum(
+        score["math_verify"] for score in scores
+    ) / len(scores)
+    return result
 
 
 def last_boxed_only_string(string: str) -> Optional[str]:
