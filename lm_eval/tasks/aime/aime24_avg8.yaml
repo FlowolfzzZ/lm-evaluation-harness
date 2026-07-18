@@ -1,7 +1,7 @@
 include: aime24.yaml
 task: aime24_avg8
 repeats: 8
-# doc_to_text: "Question: {{Problem}}\nPlease reason step by step, and put your final answer within \\boxed{}.\nAnswer:"
+doc_to_text: "Question: {{Problem}}\nPlease reason step by step, and put your final answer within \\boxed{}.\nAnswer:"
 process_results: !function utils.process_results_samples
 metric_list:
   - metric: "sample@1"
@@ -39,7 +39,11 @@ generation_kwargs:
     - "<|eot_id|>"
   do_sample: true
   temperature: 0.7
-  max_gen_toks: 32768
+  top_p: 0.8
+  top_k: 20
+  min_p: 0
+  presence_penalty: 1.5
+  max_gen_toks: 38912
 filter_list:
   - name: "collect_responses"
     filter:

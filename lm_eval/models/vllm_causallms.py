@@ -410,6 +410,7 @@ class VLLM(TemplateLM):
             # in gpu_worker.init_device.
             @ray.remote(num_gpus=self.tensor_parallel_size)
             def dp_replica(
+                replica_idx: int,
                 model_args: dict,
                 sampling_params: list[SamplingParams],
                 requests: list[list[int]],
@@ -422,6 +423,12 @@ class VLLM(TemplateLM):
                     for k, v in model_args.items()
                     if k != "distributed_executor_backend"
                 }
+                # Each Ray actor owns an independent vLLM engine. Giving every
+                # actor the same engine seed makes repeated sampling collapse
+                # to duplicate generations when requests are distributed in
+                # the same order. Derive deterministic per-replica seeds from
+                # the backend's base seed instead.
+                model_args["seed"] = int(model_args.get("seed", 1234)) + replica_idx
                 # ray propagates driver env vars into actors. VLLM_DP_* can
                 # leak in from EngineArgs/chat-template resolution on the
                 # driver and make the inner LLM (DP=1) compute a nonzero
@@ -448,8 +455,10 @@ class VLLM(TemplateLM):
                 list(sp) for sp in distribute(self.data_parallel_size, sampling_params)
             ]  # type: ignore
             inputs = (
-                (self.model_args, sp, req, self.lora_request)
-                for req, sp in zip(requests, sampling_params, strict=True)  # type: ignore
+                (replica_idx, self.model_args, sp, req, self.lora_request)
+                for replica_idx, (req, sp) in enumerate(
+                    zip(requests, sampling_params, strict=True)  # type: ignore
+                )
             )
             object_refs = [dp_replica.remote(*x) for x in inputs]
             results = ray.get(object_refs)
