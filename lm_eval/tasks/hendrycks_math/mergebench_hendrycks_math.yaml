@@ -1,0 +1,49 @@
+group: mergebench_hendrycks_math
+task:
+  - &math_defaults
+    task: mergebench_hendrycks_math_algebra
+    dataset_name: algebra
+    dataset_path: EleutherAI/hendrycks_math
+    process_docs: !function mergebench_scoring.math_process_docs
+    output_type: generate_until
+    training_split: train
+    test_split: test
+    doc_to_text: "Problem: {{problem}}\nAnswer:"
+    doc_to_target: "{{answer}}"
+    process_results: !function mergebench_scoring.math_process_results
+    num_fewshot: 0
+    generation_kwargs:
+      until:
+        - "Problem:"
+      do_sample: false
+      temperature: 0
+    metric_list:
+      - metric: exact_match
+        aggregation: mean
+        higher_is_better: true
+    metadata:
+      version: 1.0
+  - <<: *math_defaults
+    task: mergebench_hendrycks_math_counting_and_prob
+    dataset_name: counting_and_probability
+  - <<: *math_defaults
+    task: mergebench_hendrycks_math_geometry
+    dataset_name: geometry
+  - <<: *math_defaults
+    task: mergebench_hendrycks_math_intermediate_algebra
+    dataset_name: intermediate_algebra
+  - <<: *math_defaults
+    task: mergebench_hendrycks_math_num_theory
+    dataset_name: number_theory
+  - <<: *math_defaults
+    task: mergebench_hendrycks_math_prealgebra
+    dataset_name: prealgebra
+  - <<: *math_defaults
+    task: mergebench_hendrycks_math_precalc
+    dataset_name: precalculus
+aggregate_metric_list:
+  - metric: exact_match
+    aggregation: mean
+    weight_by_size: true
+metadata:
+  version: 1.0

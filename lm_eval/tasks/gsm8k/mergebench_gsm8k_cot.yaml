@@ -1,0 +1,11 @@
+include: gsm8k-cot.yaml
+task: mergebench_gsm8k_cot
+tag: []
+process_results: !function lm_eval.tasks.hendrycks_math.mergebench_scoring.gsm8k_process_results
+filter_list: null
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+metadata:
+  version: 1.0
